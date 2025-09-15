@@ -35,6 +35,7 @@ For more information, please refer to <https://unlicense.org>
 #include <math.h>
 #include <string.h>
 #include <stdbool.h>
+#include <errno.h>
 
 /* Defines */
 
@@ -91,7 +92,7 @@ bool aht20_get_all_data(struct aht20_sensor *sensor);
 */
 bool aht20_get_humidity(struct aht20_sensor *sensor);
 
-/* Gets a measurement from the sensor and performs calculationsmfor temperature (in Celcuis).
+/* Gets a measurement from the sensor and performs calculations for temperature (in Celcuis).
 *  Checks CRC of data received.
 *
 *  in sensor - pointer to aht20_sensor struct

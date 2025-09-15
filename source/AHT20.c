@@ -94,6 +94,13 @@ static unsigned char crc8(char *data, int len)
     return crc;
 }
 
+/* Uses sensor data to perform CRC check
+*
+*  in sensor - pointer to struct aht20_sensor to provide sensor data and CRC byte
+*              to help validate calculated CRC
+*
+*  out - true or false based on if crc check was successfully performed
+*/
 bool crc_check(struct aht20_sensor *sensor)
 {
     unsigned char crc_calc;
@@ -113,11 +120,28 @@ bool crc_check(struct aht20_sensor *sensor)
     return true;
 }
 
+/* Sleeps for a specified number of milliseconds. Continues with
+*  sleep if interrupted.
+*
+*  in ms - time to be delayed in milliseconds
+*
+*  out - None
+*/
+static void delay_ms(unsigned ms)
+{
+    struct timespec req;
+    req.tv_sec = 0;
+    req.tv_nsec = (long)(ms * 1000000L);
+
+   /* Wait the full time if sleep is interrupted */
+    while (nanosleep(&req, &req) == -1 && errno == EINTR);
+}
+
 /* Sends a command to the sensor to trigger a measurement, then waits for the 
-*  measurement to finish. Once the measurement is done, the data is stored 
+*  measurement to finish. Once the measurement is done, the data is stored
 *  in sensor->buf.
 *
-*  in sensor - pointer to aht20_sensor struct to provide I2C handle and buffer
+*  in sensor - pointer to struct aht20_sensor to provide I2C handle and buffer
 *              to store data
 *  out - None
 */
@@ -127,7 +151,7 @@ static void get_measurement(struct aht20_sensor *sensor)
 
    lgI2cWriteDevice(sensor->lg_I2C_handle, trigger_message, SENSOR_TRIG_LEN);
 
-   sleep(0.08);
+   delay_ms(80);
 
    // Clear buffer and read state byte from sensor
    memset(sensor->buf, 0, SENSOR_DATA_LEN *sizeof(sensor->buf[0]));
@@ -165,7 +189,7 @@ void aht20_init(struct aht20_sensor *sensor)
    {
       lgI2cWriteDevice(sensor->lg_I2C_handle, init_message,  SENSOR_INIT_LEN);
 
-      sleep(0.01);
+      delay_ms(10);
    }
 }
 
@@ -215,5 +239,5 @@ void aht20_soft_reset(struct aht20_sensor *sensor)
 {
     lgI2cWriteDevice(sensor->lg_I2C_handle, reset_message,  SENSOR_RESET_LEN);
 
-    sleep(0.02);
+    delay_ms(20);
 }
