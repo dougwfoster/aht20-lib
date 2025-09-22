@@ -25,6 +25,6 @@ example application.
 
 A sample of the example output is below.
 
-    Temp: 21C 69F
-    Relative Humidity: 47.05%
+    Temp: 21.67C 71.01F
+    Relative Humidity: 60.76%
 

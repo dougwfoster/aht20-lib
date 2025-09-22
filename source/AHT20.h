@@ -49,7 +49,7 @@ struct aht20_sensor
 {
     char  buf[SENSOR_DATA_LEN];
     float humidity;
-    int   temperature;
+    float   temperature;
     int   lg_I2C_handle;
     int   I2C_dev;
 };

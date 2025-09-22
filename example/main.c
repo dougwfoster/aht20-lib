@@ -28,7 +28,7 @@ int main(void)
             printf("CRC failed while getting humidity\n");
        }
 
-       printf("Temp: %dC %dF\n", sensor.temperature, C_TO_F(sensor.temperature));
+       printf("Temp: %.2fC %.2fF\n", sensor.temperature, C_TO_F(sensor.temperature));
        printf("Relative Humidity: %.2f%%\n", sensor.humidity);
        sleep(5);
    }
