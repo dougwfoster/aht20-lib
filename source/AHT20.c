@@ -66,7 +66,7 @@ static const char reset_message[SENSOR_RESET_LEN] = { 0xba };
 
 /* Static Functions */
 static unsigned char crc8(char *data, int len);
-static void get_measurement(struct aht20_sensor *sensor);
+static bool get_measurement(struct aht20_sensor *sensor);
 
 /* Calculates CRC (based on https://stackoverflow.com/questions/51752284/how-to-calculate-crc8-in-c)
 *
@@ -143,26 +143,34 @@ static void delay_ms(unsigned ms)
 *
 *  in sensor - pointer to struct aht20_sensor to provide I2C handle and buffer
 *              to store data
-*  out - None
+*  out - 1 (true) if getting measurment from sensor succeeds
+*        0 (false) if getting measurement fails
 */
-static void get_measurement(struct aht20_sensor *sensor)
+static bool get_measurement(struct aht20_sensor *sensor)
 {
    unsigned char status;
+   int result;
 
-   lgI2cWriteDevice(sensor->lg_I2C_handle, trigger_message, SENSOR_TRIG_LEN);
+   result = lgI2cWriteDevice(sensor->lg_I2C_handle, trigger_message, SENSOR_TRIG_LEN);
+   if(result < 0)
+       return false;
 
    delay_ms(80);
 
    // Clear buffer and read state byte from sensor
    memset(sensor->buf, 0, SENSOR_DATA_LEN *sizeof(sensor->buf[0]));
-   lgI2cReadDevice(sensor->lg_I2C_handle, sensor->buf, SENSOR_STATE_LEN);
+   result = lgI2cReadDevice(sensor->lg_I2C_handle, sensor->buf, SENSOR_STATE_LEN);
+   if(result < 0)
+       return false;
 
    // Check if sensor is busy taking measurement
    status = (1U << BUSY_BIT) & sensor->buf[0];
 
    while(status)
    {
-       lgI2cReadDevice(sensor->lg_I2C_handle, sensor->buf, SENSOR_STATE_LEN);
+       result = lgI2cReadDevice(sensor->lg_I2C_handle, sensor->buf, SENSOR_STATE_LEN);
+       if(result < 0)
+           return false;
 
        status = (1U << BUSY_BIT) & sensor->buf[0];
    }
@@ -170,35 +178,58 @@ static void get_measurement(struct aht20_sensor *sensor)
    // Clear buffer
    memset(sensor->buf, 0, SENSOR_DATA_LEN *sizeof(sensor->buf[0]));
 
-   // Read data bytes form sensor
-   lgI2cReadDevice(sensor->lg_I2C_handle, sensor->buf, SENSOR_DATA_LEN);
-
+   // Read data bytes from sensor
+   result = lgI2cReadDevice(sensor->lg_I2C_handle, sensor->buf, SENSOR_DATA_LEN);
+   if(result < 0)
+       return false;
+   else
+       return true;
 }
 
 
-void aht20_init(struct aht20_sensor *sensor)
+bool aht20_init(struct aht20_sensor *sensor)
 {
    unsigned char status;
+   int result;
+
+   if(sensor == NULL)
+       return false;
 
    sensor->lg_I2C_handle = lgI2cOpen(sensor->I2C_dev, AHT20_I2C_ADDR, 0);
+   if(sensor->lg_I2C_handle < 0)
+       return false;
 
-   lgI2cReadDevice(sensor->lg_I2C_handle, sensor->buf, SENSOR_STATE_LEN);
+
+   result = lgI2cReadDevice(sensor->lg_I2C_handle, sensor->buf, SENSOR_STATE_LEN);
+   if(result < 0)
+       return false;
+
    status = (1U << CALIBRATE_EN_BIT) & sensor->buf[STATUS_BYTE];
 
    if(status == 0)
    {
-      lgI2cWriteDevice(sensor->lg_I2C_handle, init_message,  SENSOR_INIT_LEN);
+      result = lgI2cWriteDevice(sensor->lg_I2C_handle, init_message,  SENSOR_INIT_LEN);
+      if(result < 0)
+          return false;
 
       delay_ms(10);
    }
+
+   return true;
 }
 
 bool aht20_get_all_data(struct aht20_sensor *sensor)
 {
    int temp;
    int humidity;
+   bool result =  false;
 
-   get_measurement(sensor);
+   if(sensor == NULL)
+       return result;
+
+   result = get_measurement(sensor);
+   if(result == false)
+       return result;
 
    temp = (int)((sensor->buf[3] & 0x0F) << 16) | (int)(sensor->buf[4] << 8) | (int)sensor->buf[5];
 
@@ -206,38 +237,61 @@ bool aht20_get_all_data(struct aht20_sensor *sensor)
 
    humidity = (int)(sensor->buf[1] << 12) | (int)(sensor->buf[2] << 4) | (int)((sensor->buf[3] & 0xF0) >> 4);
    sensor->humidity = humidity * 100 / pow(2,20);
-
-   return crc_check(sensor);
+   
+   result = crc_check(sensor);
+   return result;
 }
 
 bool aht20_get_temp(struct aht20_sensor *sensor)
 {
    int temp;
+   bool result =  false;
 
-   get_measurement(sensor);
+   if(sensor == NULL)
+       return result;
+
+   result = get_measurement(sensor);
+   if(result == false)
+       return result;
 
    temp = (int)((sensor->buf[3] & 0x0F) << 16) | (int)(sensor->buf[4] << 8) | (int)sensor->buf[5];
 
    sensor->temperature = (temp/pow(2,20)) * 200-50;
 
-   return crc_check(sensor);
+   result = crc_check(sensor);
+   return result;
 }
 
 bool aht20_get_humidity(struct aht20_sensor *sensor)
 {
    int humidity;
+   bool result =  false;
 
-   get_measurement(sensor);
+   if(sensor == NULL)
+       return result;
+   
+   result = get_measurement(sensor);
+   if(result == false)
+       return result;
 
    humidity = (int)(sensor->buf[1] << 12) | (int)(sensor->buf[2] << 4) | (int)((sensor->buf[3] & 0xF0) >> 4);
    sensor->humidity = humidity * 100 / pow(2,20);
 
-   return crc_check(sensor);
+   result = crc_check(sensor);
+   return result;
 }
 
-void aht20_soft_reset(struct aht20_sensor *sensor)
+bool aht20_soft_reset(struct aht20_sensor *sensor)
 {
-    lgI2cWriteDevice(sensor->lg_I2C_handle, reset_message,  SENSOR_RESET_LEN);
+   int result;
 
-    delay_ms(20);
+   if(sensor == NULL)
+       return false;
+
+   result = lgI2cWriteDevice(sensor->lg_I2C_handle, reset_message,  SENSOR_RESET_LEN);
+   if(result < 0)
+       return false;
+
+   delay_ms(20);
+   return true;
 }

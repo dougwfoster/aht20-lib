@@ -49,7 +49,7 @@ struct aht20_sensor
 {
     char  buf[SENSOR_DATA_LEN];
     float humidity;
-    float   temperature;
+    float temperature;
     int   lg_I2C_handle;
     int   I2C_dev;
 };
@@ -70,16 +70,19 @@ bool crc_check(struct aht20_sensor *sensor);
 *  if the bit is 0, followed by a 10ms wait.
 *
 *  in sensor - pointer to aht20_sensor struct to initialize
-*  out - None
+*  out - 1 (true) if the aht20_sensor pointer is successfully initialized
+*        0 (false) if initialization fails
 */
-void aht20_init(struct aht20_sensor *sensor);
+bool aht20_init(struct aht20_sensor *sensor);
 
 /* Gets a measurement from the sensor and performs calculations for temperature (in Celcuis)
 *  and relative humidity percentage. Checks CRC of data received.
 *
 *  in sensor - pointer to aht20_sensor struct
-*  out - 1 (true) if the calculated CRC8 is the same as the CRC8 byte that was recieved from the sensor
-*        0 (false) if the calculated CRC8 is different from the CRC8 byte that was recieved from the sensor
+*  out - 1 (true) if the calculated CRC8 is the same as the CRC8 byte that was recieved from the sensor and
+*        getting sensor data succeeds
+*        0 (false) if the calculated CRC8 is different from the CRC8 byte that was recieved from the sensor 
+*        or getting sensor data fails
 */
 bool aht20_get_all_data(struct aht20_sensor *sensor);
 
@@ -87,8 +90,10 @@ bool aht20_get_all_data(struct aht20_sensor *sensor);
 *  percentage. Checks CRC of data received.
 *
 *  in sensor - pointer to aht20_sensor struct
-*  out - 1 (true) if the calculated CRC8 is the same as the CRC8 byte that was recieved from the sensor
+*  out - 1 (true) if the calculated CRC8 is the same as the CRC8 byte that was recieved from the sensor and
+*        getting sensor data succeeds
 *        0 (false) if the calculated CRC8 is different from the CRC8 byte that was recieved from the sensor
+*        or getting sensor data fails
 */
 bool aht20_get_humidity(struct aht20_sensor *sensor);
 
@@ -96,8 +101,10 @@ bool aht20_get_humidity(struct aht20_sensor *sensor);
 *  Checks CRC of data received.
 *
 *  in sensor - pointer to aht20_sensor struct
-*  out - 1 (true) if the calculated CRC8 is the same as the CRC8 byte that was recieved from the sensor
+*  out - 1 (true) if the calculated CRC8 is the same as the CRC8 byte that was recieved from the sensor and
+*        getting sensor data succeeds
 *        0 (false) if the calculated CRC8 is different from the CRC8 byte that was recieved from the sensor
+*        or getting sensor data fails
 */
 bool aht20_get_temp(struct aht20_sensor *sensor);
 
@@ -105,8 +112,9 @@ bool aht20_get_temp(struct aht20_sensor *sensor);
 /* Sends a command to the AHT20 sensor to perform a soft reset, followed by a 20ms wait.
 *
 *  in sensor - pointer to aht20_sensor struct that provides handle to send reset command
-*  out - None
+*  out - 1 (true) if sending reset command to sensor succeeds
+*        0 (false) if sending reset command to sensor fails or input is NULL
 */
-void aht20_soft_reset(struct aht20_sensor * sensor);
+bool aht20_soft_reset(struct aht20_sensor * sensor);
 
 #endif /* !AHT20_H */
