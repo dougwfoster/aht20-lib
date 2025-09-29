@@ -11,7 +11,13 @@ int main(void)
    // Set the I2C device/bus to use
    sensor.I2C_dev = I2C_BUS;
 
-   aht20_init(&sensor);
+   status = aht20_init(&sensor);
+   if(status == false)
+   {
+        fprintf(stderr, "Sensor failed initialization\n");
+        return EXIT_FAILURE;
+   }
+       
 
    while(1)
    {
@@ -19,13 +25,13 @@ int main(void)
        status = aht20_get_temp(&sensor);
        if(status == false)
        {
-            printf("CRC failed while getting temperature\n");
+            fprintf(stderr, "Getting temperature failed\n");
        }
 
-       aht20_get_humidity(&sensor);
+       status = aht20_get_humidity(&sensor);
        if(status == false)
        {
-            printf("CRC failed while getting humidity\n");
+            fprintf(stderr, "Sensor humidity failed\n");
        }
 
        printf("Temp: %.2fC %.2fF\n", sensor.temperature, C_TO_F(sensor.temperature));
@@ -33,5 +39,5 @@ int main(void)
        sleep(5);
    }
 
-   return 0;
+   return EXIT_SUCCESS;
 }
