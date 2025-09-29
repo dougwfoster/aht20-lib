@@ -36,6 +36,7 @@ For more information, please refer to <https://unlicense.org>
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <time.h>
 
 /* Defines */
 
@@ -43,7 +44,7 @@ For more information, please refer to <https://unlicense.org>
 #define SENSOR_DATA_LEN 7
 
 // Conversion of Celcius to Fahrenheit
-#define C_TO_F(x)  ((x * 9/5) + 32)
+#define C_TO_F(x)  (((x) * 9.0f/5.0f) + 32.0f)
 
 struct aht20_sensor
 {
