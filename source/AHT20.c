@@ -144,12 +144,13 @@ static void delay_ms(unsigned ms)
 *  in sensor - pointer to struct aht20_sensor to provide I2C handle and buffer
 *              to store data
 *  out - 1 (true) if getting measurment from sensor succeeds
-*        0 (false) if getting measurement fails
+*        0 (false) if getting measurement fails or times out
 */
 static bool get_measurement(struct aht20_sensor *sensor)
 {
-   unsigned char status;
+   uint8_t status;
    int result;
+   int tries = 100; // 100ms additional wait for status
 
    result = lgI2cWriteDevice(sensor->lg_I2C_handle, trigger_message, SENSOR_TRIG_LEN);
    if(result < 0)
@@ -158,25 +159,33 @@ static bool get_measurement(struct aht20_sensor *sensor)
    delay_ms(80);
 
    // Clear buffer and read state byte from sensor
-   memset(sensor->buf, 0, SENSOR_DATA_LEN *sizeof(sensor->buf[0]));
+   memset(sensor->buf, 0, SENSOR_DATA_LEN * sizeof(sensor->buf[0]));
    result = lgI2cReadDevice(sensor->lg_I2C_handle, sensor->buf, SENSOR_STATE_LEN);
    if(result < 0)
        return false;
 
    // Check if sensor is busy taking measurement
-   status = (1U << BUSY_BIT) & sensor->buf[0];
+   status = (uint8_t)((1u << BUSY_BIT) & sensor->buf[STATUS_BYTE]);
 
-   while(status)
+   // Bound the wait to avoid infinite loops; sensor should complete in ~80ms
+   while(status && tries > 0)
    {
-       result = lgI2cReadDevice(sensor->lg_I2C_handle, sensor->buf, SENSOR_STATE_LEN);
+       result = lgI2cReadDevice(sensor->lg_I2C_handle, (char*)sensor->buf, SENSOR_STATE_LEN);
        if(result < 0)
            return false;
 
-       status = (1U << BUSY_BIT) & sensor->buf[0];
+       status = (uint8_t)((1u << BUSY_BIT) & sensor->buf[STATUS_BYTE]);
+       if (status)
+           delay_ms(1);
+           
+        tries--;
    }
 
+   if (status) // timed out
+       return false;
+
    // Clear buffer
-   memset(sensor->buf, 0, SENSOR_DATA_LEN *sizeof(sensor->buf[0]));
+   memset(sensor->buf, 0, SENSOR_DATA_LEN * sizeof(sensor->buf[0]));
 
    // Read data bytes from sensor
    result = lgI2cReadDevice(sensor->lg_I2C_handle, sensor->buf, SENSOR_DATA_LEN);
