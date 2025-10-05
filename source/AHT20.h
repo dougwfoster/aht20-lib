@@ -43,7 +43,7 @@ For more information, please refer to <https://unlicense.org>
 // Amount of bytes read from sensor when getting a measurement
 #define SENSOR_DATA_LEN 7
 
-// Conversion of Celcius to Fahrenheit
+// Conversion of Celsius to Fahrenheit
 #define C_TO_F(x)  (((x) * 9.0f/5.0f) + 32.0f)
 
 struct aht20_sensor
@@ -76,7 +76,7 @@ bool crc_check(struct aht20_sensor *sensor);
 */
 bool aht20_init(struct aht20_sensor *sensor);
 
-/* Gets a measurement from the sensor and performs calculations for temperature (in Celcuis)
+/* Gets a measurement from the sensor and performs calculations for temperature (in Celsius)
 *  and relative humidity percentage. Checks CRC of data received.
 *
 *  in sensor - pointer to aht20_sensor struct
@@ -98,7 +98,7 @@ bool aht20_get_all_data(struct aht20_sensor *sensor);
 */
 bool aht20_get_humidity(struct aht20_sensor *sensor);
 
-/* Gets a measurement from the sensor and performs calculations for temperature (in Celcuis).
+/* Gets a measurement from the sensor and performs calculations for temperature (in Celsius).
 *  Checks CRC of data received.
 *
 *  in sensor - pointer to aht20_sensor struct

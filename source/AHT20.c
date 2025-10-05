@@ -112,7 +112,7 @@ bool crc_check(struct aht20_sensor *sensor)
 
     crc_calc = crc8(sensor->buf, (SENSOR_DATA_LEN-1));
 
-    if((crc_calc != sensor->buf[CRC_BYTE]) && (sensor->buf[CRC_BYTE] != 0xFF))
+    if(crc_calc != sensor->buf[CRC_BYTE])
     {
         return false;
     }
