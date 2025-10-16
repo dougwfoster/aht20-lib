@@ -32,7 +32,6 @@ For more information, please refer to <https://unlicense.org>
 #include <stdlib.h>
 #include <unistd.h>
 #include <lgpio.h>
-#include <math.h>
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>

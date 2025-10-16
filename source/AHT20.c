@@ -59,6 +59,9 @@ For more information, please refer to <https://unlicense.org>
 #define CALIBRATE_EN_BIT 3
 #define BUSY_BIT         7
 
+// Constant to be used in calculations for pow(2,20)
+#define POW_2_20 1048576.0f
+
 /* Static Variables */
 static const char init_message[SENSOR_INIT_LEN] = { 0xbe, 0x08, 0x00 };
 static const char trigger_message[SENSOR_TRIG_LEN] = { 0xac, 0x33, 0x00 };
@@ -242,10 +245,10 @@ bool aht20_get_all_data(struct aht20_sensor *sensor)
 
    temp = (int)((sensor->buf[3] & 0x0F) << 16) | (int)(sensor->buf[4] << 8) | (int)sensor->buf[5];
 
-   sensor->temperature = (temp/pow(2,20)) * 200-50;
+   sensor->temperature = (temp/POW_2_20) * 200-50;
 
    humidity = (int)(sensor->buf[1] << 12) | (int)(sensor->buf[2] << 4) | (int)((sensor->buf[3] & 0xF0) >> 4);
-   sensor->humidity = humidity * 100 / pow(2,20);
+   sensor->humidity = humidity * 100 / POW_2_20;
    
    result = crc_check(sensor);
    return result;
@@ -265,7 +268,7 @@ bool aht20_get_temp(struct aht20_sensor *sensor)
 
    temp = (int)((sensor->buf[3] & 0x0F) << 16) | (int)(sensor->buf[4] << 8) | (int)sensor->buf[5];
 
-   sensor->temperature = (temp/pow(2,20)) * 200-50;
+   sensor->temperature = (temp/POW_2_20) * 200-50;
 
    result = crc_check(sensor);
    return result;
@@ -284,7 +287,7 @@ bool aht20_get_humidity(struct aht20_sensor *sensor)
        return result;
 
    humidity = (int)(sensor->buf[1] << 12) | (int)(sensor->buf[2] << 4) | (int)((sensor->buf[3] & 0xF0) >> 4);
-   sensor->humidity = humidity * 100 / pow(2,20);
+   sensor->humidity = humidity * 100 / POW_2_20;
 
    result = crc_check(sensor);
    return result;
